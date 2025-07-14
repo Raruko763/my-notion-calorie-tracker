@@ -39,7 +39,7 @@ function createChartAndSaveToDietFolder() {
   const sheet = ss.getSheetByName("シート1");
   const lastRow = sheet.getLastRow();
 
-   const chart = sheet.newChart()
+  const chart = sheet.newChart()
     .setChartType(Charts.ChartType.LINE)
     .addRange(sheet.getRange("A1:A" + lastRow)) // 日付
     .addRange(sheet.getRange("D1:D" + lastRow)) // 摂取カロリー
@@ -47,7 +47,13 @@ function createChartAndSaveToDietFolder() {
     .setPosition(2, 8, 0, 0)
     .setOption("title", "摂取カロリーと消費カロリーの推移")
     .setOption("curveType", "function")
+    .setOption("series", {
+      0: { labelInLegend: "摂取カロリー", color: "blue", lineDashStyle: [4, 4] },
+      1: { labelInLegend: "総消費カロリー", color: "red", lineDashStyle: [1, 0] }
+    })
+    .setOption("legend", { position: "top" })
     .build();
+
 
   sheet.insertChart(chart);
   const blob = chart.getAs('image/png');

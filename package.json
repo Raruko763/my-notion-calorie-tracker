@@ -1,23 +1,26 @@
 {
   "name": "my-notion-calorie-tracker",
   "version": "1.0.0",
-  "description": "",
+  "description": "NotionとGoogle Apps Scriptを連携したカロリー・歩数管理ツール",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "push": "clasp push",
+    "pull": "clasp pull",
+    "start": "npm run push",
+    "build": "echo '（必要があればビルド処理をここに記述）'"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/toshi763/my-notion-calorie-tracker.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Raruko763",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/toshi763/my-notion-calorie-tracker/issues"
+    "url": "https://github.com/Raruko763/my-notion-calorie-tracker/issues"
   },
-  "homepage": "https://github.com/toshi763/my-notion-calorie-tracker#readme",
+  "homepage": "https://github.com/Raruko763/my-notion-calorie-tracker#readme",
   "devDependencies": {
     "@types/google-apps-script": "^1.0.99"
   }

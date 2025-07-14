@@ -62,13 +62,13 @@ function createChartAndSaveToDietFolder() {
 
   const folder = DriveApp.getFolderById(folderId);
 
-  // 同名ファイルがあれば削除してから保存（＝上書き）
   const files = folder.getFilesByName("calorie_chart.png");
-  while (files.hasNext()) {
-    files.next().setTrashed(true);
-  }
-
-  const file = folder.createFile(blob).setName("calorie_chart.png");
+    if (files.hasNext()) {
+      const file = files.next();
+      file.setContent(blob.getDataAsString()); // ←上書き保存（ID維持）
+    } else {
+      folder.createFile(blob).setName("calorie_chart.png"); // なければ新規作成
+    }
 
   Logger.log("画像URL: https://drive.google.com/uc?export=view&id=" + file.getId());
 }

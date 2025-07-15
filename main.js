@@ -1,5 +1,5 @@
 function importNotionData() {
-  const url =  `https://api.notion.com/v1/databases/${SECRETS.DATABASE_ID}/query`;
+  const url = `https://api.notion.com/v1/databases/${SECRETS.DATABASE_ID}/query`;
   const options = {
     method: "post",
     headers: {
@@ -14,33 +14,49 @@ function importNotionData() {
   const data = JSON.parse(response.getContentText());
 
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("シート1");
-  sheet.clear(); // 上書きモード
-  sheet.appendRow(["日付", "歩数", "歩いた距離", "摂取カロリー", "消費カロリー", "総消費カロリー","塩分","タンパク質","脂質","炭水化物","ミネラル","ビタミン","食物繊維","コメント"]);
+
+  // 📌 シート全体をクリアしてヘッダーだけ書き直す
+  sheet.clear();
+  sheet.appendRow([
+    "日付", "歩数", "歩いた距離", "摂取カロリー", "消費カロリー", "総消費カロリー",
+    "塩分", "タンパク質", "脂質", "炭水化物", "ミネラル", "ビタミン", "食物繊維", "コメント"
+  ]);
+
+  const rows = [];
 
   data.results.forEach(page => {
     const props = page.properties;
     const dateValue = props["日付"]?.date?.start || "";
-    // 日付がない行はスキップする
     if (!dateValue) return;
-    const steps          = props["歩数"]?.number ?? 0;
-    const distance       = props["歩いた距離(km)"]?.number ?? 0;
-    const burn           = props["消費Kcal"]?.number ?? 0;
-    const totalBurn      = (props["消費Kcal"]?.number ?? 0) + 1400;
-    const intake         = props["摂取Kcal"]?.number ?? 0;
-    const salt           = props["塩分(g)"]?.number ?? 0;
-    const protein        = props["タンパク質(g) "]?.number ?? 0;
-    const lipid          = props["脂質(g) "]?.number ?? 0;
-    const carbohydrates  = props["炭水化物(g) "]?.number ?? 0;
-    const vitamin  = props["ビタミン(g) "]?.number ?? 0;
-    const mineral  = props["ミネラル(g) "]?.number ?? 0;
-    const fiber          = props["食物繊維(g) "]?.number ?? 0;
-    const memo           = props["コメント"]?.rich_text?.[0]?.plain_text || "";
 
-    sheet.appendRow([dateValue, steps, distance, intake, burn,totalBurn,salt,protein,lipid,carbohydrates,vitamin,mineral,fiber, memo]);
+    const steps         = props["歩数"]?.number ?? 0;
+    const distance      = props["歩いた距離(km)"]?.number ?? 0;
+    const burn          = props["消費Kcal"]?.number ?? 0;
+    const totalBurn     = burn + SECRETS.BASAL_METABOLISM;
+    const intake        = props["摂取Kcal"]?.number ?? 0;
+    const salt          = props["塩分(g)"]?.number ?? 0;
+    const protein       = props["タンパク質(g) "]?.number ?? 0;
+    const lipid         = props["脂質(g) "]?.number ?? 0;
+    const carbs         = props["炭水化物(g) "]?.number ?? 0;
+    const mineral       = props["ミネラル(g) "]?.number ?? 0;
+    const vitamin       = props["ビタミン(g) "]?.number ?? 0;
+    const fiber         = props["食物繊維(g) "]?.number ?? 0;
+    const memo          = props["コメント"]?.rich_text?.[0]?.plain_text || "";
+
+    rows.push([
+      dateValue, steps, distance, intake, burn, totalBurn,
+      salt, protein, lipid, carbs, mineral, vitamin, fiber, memo
+    ]);
   });
-  
-}
 
+  // 📅 古い日付順に並び替え（ISO8601なら文字列比較でOK）
+  rows.sort((a, b) => a[0].localeCompare(b[0]));
+
+  // 📌 並べたデータを1行ずつ追記
+  rows.forEach(row => {
+    sheet.appendRow(row);
+  });
+}
 // 📊 グラフを生成して、Googleドライブの「ダイエットフォルダ」に上書き保存
 function createCalorieChartAndSaveToDietFolder() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();

@@ -15,7 +15,7 @@ function importNotionData() {
 
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("シート1");
   sheet.clear(); // 上書きモード
-  sheet.appendRow(["日付", "歩数", "歩いた距離", "摂取カロリー", "消費カロリー", "総消費カロリー","塩分","タンパク質","脂質","炭水化物","食物繊維","コメント"]);
+  sheet.appendRow(["日付", "歩数", "歩いた距離", "摂取カロリー", "消費カロリー", "総消費カロリー","塩分","タンパク質","脂質","炭水化物","ミネラル","ビタミン","食物繊維","コメント"]);
 
   data.results.forEach(page => {
     const props = page.properties;
@@ -31,15 +31,18 @@ function importNotionData() {
     const protein        = props["タンパク質(g) "]?.number ?? 0;
     const lipid          = props["脂質(g) "]?.number ?? 0;
     const carbohydrates  = props["炭水化物(g) "]?.number ?? 0;
+    const vitamin  = props["ビタミン(g) "]?.number ?? 0;
+    const mineral  = props["ミネラル(g) "]?.number ?? 0;
     const fiber          = props["食物繊維(g) "]?.number ?? 0;
     const memo           = props["コメント"]?.rich_text?.[0]?.plain_text || "";
 
-    sheet.appendRow([dateValue, steps, distance, intake, burn,totalBurn,salt,protein,lipid,carbohydrates,fiber, memo]);
+    sheet.appendRow([dateValue, steps, distance, intake, burn,totalBurn,salt,protein,lipid,carbohydrates,vitamin,mineral,fiber, memo]);
   });
+  Logger.log(stringfy(props));
 }
 
 // 📊 グラフを生成して、Googleドライブの「ダイエットフォルダ」に上書き保存
-function createChartAndSaveToDietFolder() {
+function createCalorieChartAndSaveToDietFolder() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("シート1");
   const lastRow = sheet.getLastRow();
@@ -71,3 +74,4 @@ function createChartAndSaveToDietFolder() {
 
   Logger.log("画像URL: https://drive.google.com/uc?export=view&id=" + file.getId());
 }
+

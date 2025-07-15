@@ -15,21 +15,26 @@ function importNotionData() {
 
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("シート1");
   sheet.clear(); // 上書きモード
-  sheet.appendRow(["日付", "歩数", "歩いた距離", "摂取カロリー", "消費カロリー", "総消費カロリー","コメント"]);
+  sheet.appendRow(["日付", "歩数", "歩いた距離", "摂取カロリー", "消費カロリー", "総消費カロリー","塩分","タンパク質","脂質","炭水化物","食物繊維","コメント"]);
 
   data.results.forEach(page => {
     const props = page.properties;
     const dateValue = props["日付"]?.date?.start || "";
     // 日付がない行はスキップする
     if (!dateValue) return;
-    const steps     = props["歩数"]?.number ?? 0;
-    const distance  = props["歩いた距離(km)"]?.number ?? 0;
-    const burn      = props["消費Kcal"]?.number ?? 0;
-    const totalBurn = (props["消費Kcal"]?.number ?? 0) + 1400;
-    const intake    = props["摂取Kcal"]?.number ?? 0;
-    const memo      = props["コメント"]?.rich_text?.[0]?.plain_text || "";
+    const steps          = props["歩数"]?.number ?? 0;
+    const distance       = props["歩いた距離(km)"]?.number ?? 0;
+    const burn           = props["消費Kcal"]?.number ?? 0;
+    const totalBurn      = (props["消費Kcal"]?.number ?? 0) + 1400;
+    const intake         = props["摂取Kcal"]?.number ?? 0;
+    const salt           = props["塩分(g)"]?.number ?? 0;
+    const protein        = props["タンパク質(g) "]?.number ?? 0;
+    const lipid          = props["脂質(g) "]?.number ?? 0;
+    const carbohydrates  = props["炭水化物(g) "]?.number ?? 0;
+    const fiber          = props["食物繊維(g) "]?.number ?? 0;
+    const memo           = props["コメント"]?.rich_text?.[0]?.plain_text || "";
 
-    sheet.appendRow([dateValue, steps, distance, intake, burn,totalBurn, memo]);
+    sheet.appendRow([dateValue, steps, distance, intake, burn,totalBurn,salt,protein,lipid,carbohydrates,fiber, memo]);
   });
 }
 
@@ -39,7 +44,7 @@ function createChartAndSaveToDietFolder() {
   const sheet = ss.getSheetByName("シート1");
   const lastRow = sheet.getLastRow();
 
-  const chart = sheet.newChart()
+   const chart = sheet.newChart()
     .setChartType(Charts.ChartType.LINE)
     .addRange(sheet.getRange("A1:A" + lastRow)) // 日付
     .addRange(sheet.getRange("D1:D" + lastRow)) // 摂取カロリー
@@ -47,13 +52,7 @@ function createChartAndSaveToDietFolder() {
     .setPosition(2, 8, 0, 0)
     .setOption("title", "摂取カロリーと消費カロリーの推移")
     .setOption("curveType", "function")
-    .setOption("series", {
-      0: { labelInLegend: "摂取カロリー", color: "blue", lineDashStyle: [4, 4] },
-      1: { labelInLegend: "総消費カロリー", color: "red", lineDashStyle: [1, 0] }
-    })
-    .setOption("legend", { position: "top" })
     .build();
-
 
   sheet.insertChart(chart);
   const blob = chart.getAs('image/png');
@@ -62,13 +61,13 @@ function createChartAndSaveToDietFolder() {
 
   const folder = DriveApp.getFolderById(folderId);
 
+  // 同名ファイルがあれば削除してから保存（＝上書き）
   const files = folder.getFilesByName("calorie_chart.png");
-    if (files.hasNext()) {
-      const file = files.next();
-      file.setContent(blob.getDataAsString()); // ←上書き保存（ID維持）
-    } else {
-      folder.createFile(blob).setName("calorie_chart.png"); // なければ新規作成
-    }
+  while (files.hasNext()) {
+    files.next().setTrashed(true);
+  }
+
+  const file = folder.createFile(blob).setName("calorie_chart.png");
 
   Logger.log("画像URL: https://drive.google.com/uc?export=view&id=" + file.getId());
 }

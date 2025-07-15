@@ -7,7 +7,7 @@
     "push": "clasp push",
     "pull": "clasp pull",
     "start": "npm run push",
-    "build": "echo '（必要があればビルド処理をここに記述）'"
+    "build": "node build.js"
   },
   "repository": {
     "type": "git",

@@ -38,7 +38,7 @@ function importNotionData() {
 
     sheet.appendRow([dateValue, steps, distance, intake, burn,totalBurn,salt,protein,lipid,carbohydrates,vitamin,mineral,fiber, memo]);
   });
-  Logger.log(stringfy(props));
+  
 }
 
 // 📊 グラフを生成して、Googleドライブの「ダイエットフォルダ」に上書き保存
@@ -73,5 +73,47 @@ function createCalorieChartAndSaveToDietFolder() {
   const file = folder.createFile(blob).setName("calorie_chart.png");
 
   Logger.log("画像URL: https://drive.google.com/uc?export=view&id=" + file.getId());
+}
+
+function createRadarChartAndSaveToDietFolder(){
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("シート1");
+  const lastRow = sheet.getLastRow()
+
+  // データ行（直近の1日分）を読み込む
+  const labels = ["炭水化物", "脂質", "タンパク質", "ミネラル", "ビタミン"];
+  const dataRange = sheet.getRange(lastRow, 10, 1, 5); // J〜N列
+  const radarchart = sheet.newChart()
+  .setChartType(Charts.ChartType.RADAR)
+  
+  //一時的な表を作る（A列にラベル、B列に値）
+  const tmpSheet = ss.insertSheet("tmpRadarData");
+  tmpSheet.getRange(1, 1, labels.length, 1).setValues(labels.map(l => [l]));
+  tmpSheet.getRange(1, 2, 1, 5).setValues([dataRange.getValues()[0]]);
+  // チャートを作成
+  const chart = tmpSheet.newChart()
+    .setChartType(Charts.ChartType.RADAR)
+    .addRange(tmpSheet.getRange(1, 1, labels.length, 2))
+    .setOption("title", "5大栄養素の摂取バランス")
+    .setPosition(2, 4, 0, 0)
+    .build();
+
+  tmpSheet.insertChart(chart);
+
+  // チャートを画像として保存（Googleドライブ）
+  const blob = chart.getAs('image/png');
+  const folder = DriveApp.getFolderById(SECRETS.FOLDER_ID);
+
+  const files = folder.getFilesByName("radar_chart.png");
+  while (files.hasNext()) {
+    files.next().setTrashed(true);
+  }
+
+  const file = folder.createFile(blob).setName("radar_chart.png");
+  Logger.log("画像URL: https://drive.google.com/uc?export=view&id=" + file.getId());
+
+  // 一時シート削除
+  ss.deleteSheet(tmpSheet);
+
 }
 
